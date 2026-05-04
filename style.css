@@ -1,0 +1,209 @@
+:root {
+    --color-sidebar-bg: rgb(34 34 34);
+    --color-sidebar-tensor-entry: rgb(0 0 0 / .1);
+    --color-workspace-bg: rgb(26 26 26);
+    --color-border: rgb(56 56 56);
+    --color-text: rgb(255 255 255);
+    --border-style: 1px solid;
+    --border-radius: 5px;
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    color:var(--color-text);
+}
+
+.container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    position: relative;
+    background: var(--color-workspace-bg);
+}
+
+.toolbar {
+    width: 100vw;
+    height: 40px;
+    background: var(--color-sidebar-bg);
+    border: var(--border-style) var(--color-border)
+}
+
+
+.sidebar {
+    position: relative;
+    height: 100%;
+    width: 300px;
+    border-right: var(--border-style) var(--color-border);
+    background-color: var(--color-sidebar-bg);
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.sidebar.collapsed {
+    transform: translateX(-100%);
+}
+
+.sidebar-collapse-button {
+    position: absolute;
+    top: 20px;
+    right: -31px;
+    width: 30px;
+    height: 40px;
+    background: var(--color-sidebar-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-right: var(--border-style) var(--color-border);
+    border-top: var(--border-style) var(--color-border);
+    border-bottom: var(--border-style) var(--color-border);
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+    user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-user-select: none;
+}
+
+.sidebar-resizer {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 10px;
+    height: 100%;
+    background: transparent;
+}
+
+.sidebar-resizer:hover {
+    background: rgb(0 0 0 / .2);
+    cursor: ew-resize;
+}
+
+.sidebar-add-button{
+    height: 30px;
+    background: var(--color-sidebar-tensor-entry);
+    color: var(--color-text);
+    border: var(--border-style) var(--color-border);
+    border-radius: var(--border-radius);
+    margin-bottom: 5px;
+    order: 1;
+    user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-user-select: none;
+}
+
+
+.sidebar-add-button:hover {
+    background: rgb(0 0 0 / .25);
+    cursor: pointer;
+}
+
+.sidebar-tensor-list {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: auto;
+    padding: 10px;
+    margin-bottom: 40px;
+}
+
+.sidebar-tensor-list::-webkit-scrollbar {
+    width: 0;
+}
+
+.sidebar-tensor-entry {
+    margin-bottom: 5px;
+    border: var(--border-style) var(--color-border);
+    border-radius: var(--border-radius);
+    background: var(--color-sidebar-tensor-entry);
+    user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-user-select: none;
+}
+
+.sidebar-tensor-entry-header {
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 5px;
+}
+
+.sidebar-tensor-entry-header:hover {
+    background: rgb(0 0 0 / .25);
+    cursor: pointer;
+}
+
+.sidebar-tensor-entry-content {
+    padding: 10px;
+    display: none;
+    flex-direction: column;
+}
+
+.sidebar-tensor-entry.open .sidebar-tensor-entry-content {
+    display: flex;
+}
+
+.arrow {
+    margin-right: 5px;
+    font-size: 8pt;
+}
+
+.sidebar-tensor-entry.open .arrow {
+    transform: rotate(90deg);
+}
+
+.boxed-hoverable {
+    width: 30px;
+    height: 30px;
+    background: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+}
+
+.boxed-hoverable:hover {
+    background: rgb(255 255 255 / .1);
+    cursor: pointer;
+}
+
+input[type="color"] {
+    width: 30px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+input[type="text"] {
+    background: rgb(0 0 0 / .1);
+    color: var(--color-text);
+    border: var(--border-style) var(--color-border);
+    border-radius: var(--border-radius);
+}
+
+.icon-button {
+    width: 30px;
+    height: 30px;
+    background: transparent;
+    color: var(--color-text);
+    border: none;
+    border-radius: 50%;
+}
+
+.icon-button.inactive {
+    color: rgb(255 255 255 / .3);
+}
+
+.icon-button:hover {
+    background: rgb(255 255 255 / .1);
+    cursor: pointer;
+}
+

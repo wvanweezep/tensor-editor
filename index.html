@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tensor Editor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="toolbar">Toolbar</div>
+
+    <div class="container" id="container">
+
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-collapse-button" id="sidebar-collapse-button">◀</div>
+            <div class="sidebar-resizer" id="sidebar-resizer"></div>
+
+            <div class="sidebar-tensor-list" id="sidebar-tensor-list">
+                <div class="sidebar-tensor-entry">
+                    <div class="sidebar-tensor-entry-header">
+                        <div style="display: flex; align-items: center; ">
+                            <div class="arrow">▶</div>
+                            <div>name</div>
+                        </div>
+                        <div style="display: flex; align-items: center">
+                            <button class="icon-button">👁</button>
+                            <button class="icon-button">✐</button>
+                            <button class="icon-button">✕</button>
+                        </div>
+                    </div>
+                    <div class="sidebar-tensor-entry-content">
+                        <label style="display: flex; justify-content: space-between; margin-bottom: 10px">Shape: <input type="text"></label>
+                        <label style="display: flex; justify-content: space-between">Entries: <input type="text"></label>
+                    </div>
+                </div>
+                <button class="sidebar-add-button" id="sidebar-add-button">New Entry +</button>
+            </div>
+        </div>
+
+        <canvas id="mainCanvas"></canvas>
+    </div>
+
+    <script type="module" src="dist/index.js"></script>
+</body>
+</html>

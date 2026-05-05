@@ -1,7 +1,7 @@
 import {Controller, HTML} from "./controller.js";
-import {Scene3D} from "../graphics/3d/scene3d.js";
+import {Scene3D} from "../graphics/scene3d.js";
 import {gl} from "../index.js";
-import {Camera3D} from "../graphics/3d/camera3d";
+import {Camera3D} from "../graphics/camera.js";
 
 const keys: Record<string, boolean> = {};
 
@@ -28,7 +28,130 @@ export class Workspace3DCtrl extends Controller {
             scene.resize(canvas.width, canvas.height);
         }
 
+        scene.objects.set(0, new Float32Array([
+            1, 0.2, 0, 0,
+            0.2, 1, 0.1, 0,
+            0, 0.1, 1, 0,
+            0, 0, 0, -9,
+            1, 0, 0, 1
+        ]));
 
+        scene.objects.set(1, new Float32Array([
+            1, 0, 0, 0,
+            0, -1, 0.3, 0,
+            0, 0.3, 1, 0,
+            0, 0, 0, -6,
+            0, 1, 0, 1
+        ]));
+
+        scene.objects.set(2, new Float32Array([
+            -1, 0.4, 0, 0,
+            0.4, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, -5,
+            0, 0, 1, 1
+        ]));
+
+        scene.objects.set(3, new Float32Array([
+            1, 0, 0.5, 0,
+            0, 1, 0, 0,
+            0.5, 0, -1, 0,
+            0, 0, 0, -7,
+            1, 1, 0, 1
+        ]));
+
+        scene.objects.set(4, new Float32Array([
+            0.5, 0, 0, 0,
+            0, 2, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, -8,
+            1, 0, 1, 1
+        ]));
+
+        scene.objects.set(5, new Float32Array([
+            1, -0.3, 0, 0,
+            -0.3, 1, 0, 0,
+            0, 0, -1, 0,
+            0, 0, 0, -3,
+            0, 1, 1, 1
+        ]));
+
+        scene.objects.set(6, new Float32Array([
+            -1, 0, 0, 0,
+            0, -1, 0.2, 0,
+            0, 0.2, 1, 0,
+            0, 0, 0, -4,
+            0.5, 0.2, 1, 1
+        ]));
+
+        scene.objects.set(7, new Float32Array([
+            2, 0, 0, 0,
+            0, 0.5, 0, 0,
+            0, 0, -1, 0,
+            0, 0, 0, -10,
+            0.2, 1, 0.3, 1
+        ]));
+
+        scene.objects.set(8, new Float32Array([
+            1, 0.6, 0, 0,
+            0.6, -1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, -6,
+            1, 0.5, 0, 1
+        ]));
+
+        scene.objects.set(9, new Float32Array([
+            0.3, 0, 0.4, 0,
+            0, 1, 0, 0,
+            0.4, 0, 1, 0,
+            0, 0, 0, -5,
+            0.3, 0.8, 1, 1
+        ]));
+
+        scene.objects.set(10, new Float32Array([
+            -1, 0, 0, 0,
+            0, 1, -0.5, 0,
+            0, -0.5, 1, 0,
+            0, 0, 0, -7,
+            1, 0.3, 0.3, 1
+        ]));
+
+        scene.objects.set(11, new Float32Array([
+            1, 0, 0, 0,
+            0, 1, 0.7, 0,
+            0, 0.7, -1, 0,
+            0, 0, 0, -6,
+            0.6, 0.2, 0.9, 1
+        ]));
+
+        scene.objects.set(12, new Float32Array([
+            1.5, 0, 0, 0,
+            0, -0.5, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, -9,
+            0.9, 0.9, 0.2, 1
+        ]));
+
+        scene.objects.set(13, new Float32Array([
+            -0.5, 0.2, 0, 0,
+            0.2, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, -4,
+            0.1, 1, 0.6, 1
+        ]));
+
+        scene.objects.set(14, new Float32Array([
+            1, 0, 0, 0,
+            0, -1, 0, 0,
+            0, 0, -1, 0,
+            0, 0, 0, -5,
+            1, 0.4, 0.7, 1
+        ]));
+        scene.objects.upload();
+
+        canvas.addEventListener("wheel", (e) => {
+            scene.camera.viewMod = Math.max(0.1, Math.min(100000, scene.camera.viewMod * (1.0 + e.deltaY * 0.001)));
+        });
 
         window.addEventListener("keydown", (e) => {
             keys[e.key.toLowerCase()] = true;
@@ -82,7 +205,7 @@ export class Workspace3DCtrl extends Controller {
 
 
 function updateCamera(camera: Camera3D, deltaTime: number) {
-    let speed = 5.0; // units per second
+    let speed = camera.viewMod; // units per second
 
     const forward = camera.getForward();
     const right = camera.getRight();

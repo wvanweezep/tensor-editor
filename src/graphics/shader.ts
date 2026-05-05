@@ -164,7 +164,7 @@ export const defaultFrag3DSource =
 // Set the float precision to high for better accuracy
 precision highp float;
 
-#define MAX_OBJECTS 10
+#define MAX_OBJECTS 100
 
 // Struct for compactly storing a 3D Camera.
 struct Camera {
@@ -175,8 +175,15 @@ struct Camera {
     float viewMod;
 };
 
+// Struct for compactly storing colored Quadrics
+struct Quadric {
+    mat4 matrix;
+    vec4 color;
+};
+
+// Struct for compactly storing a Scene of Quadrics
 struct Scene {
-    mat4 objects[MAX_OBJECTS];
+    Quadric objects[MAX_OBJECTS];
     int size;
 };
 
@@ -199,11 +206,18 @@ struct Interval {
     float max;
 };
 
+layout(std140) uniform Quadrics {
+    Quadric data[MAX_OBJECTS];
+};
 
+// Number of Quadrics to render
+uniform int u_sceneSize;
 // Resolution of the target Canvas in pixels
 uniform vec2 u_resolution;
 // Provided Camera to render the Scene from
 uniform Camera u_camera;
+// Grid scale to render
+uniform float u_gridScale;
 
 // Outgoing computed color of the pixel
 out vec4 fragColor;
@@ -243,6 +257,10 @@ AABB generateAABB(vec3 origin, vec3 halfExtends) {
     return AABB(origin - halfExtends, origin + halfExtends);
 }
 
+// Creates a Sphere centered around c with radius r.
+// @param c (in)            center of the generated Sphere
+// @param r (in)            radius of the generated Sphere
+// @return mat4 descibing the Sphere
 mat4 generateSphere(vec3 c, float r) {
     return mat4(
         1.0, 0.0, 0.0, -c.x,
@@ -276,6 +294,7 @@ bool intersectAABB(Ray ray, AABB box, out Interval interval) {
 // Finds the intersection of a Ray with any Quadric.
 // @param ray (in)          Ray to intersect with the Quadric
 // @param Q (in)            Quadric to check intersection with
+// @param clip (in)         Interval to clip the rays to
 // @param interval (out)    t values where the ray enters and exits the Quadric
 // @return true if the ray intersects with the Quadric
 bool intersectQuadric(Ray ray, mat4 Q, Interval clip, out Interval interval) {
@@ -300,35 +319,36 @@ bool intersectQuadric(Ray ray, mat4 Q, Interval clip, out Interval interval) {
     float sqrtD = sqrt(D);
     float t0 = (-b - sqrtD) / (2.0 * a);
     float t1 = (-b + sqrtD) / (2.0 * a);
-    
+
     if (t0 > t1) { float tmp = t0; t0 = t1; t1 = tmp; }
-    
     if (t1 < max(0.0, clip.min) || t0 > clip.max) return false;
-    
+
     float start = (t0 < 0.0) ? t1 : t0;
-    
-    // collapse to point when fully outside one side
     start = (t0 < clip.min && t1 < clip.max) ? t1 : start;
     float end = (t1 > clip.max && t0 > clip.min) ? t0 : t1;
-    
+
     interval = Interval(start, end);
     return true;
 }
 
-
+// Finds the nearest intersection of a Ray with a Scene.
+// @param ray (in)          Ray to intersect with the Scene
+// @param scene (in)        Scene to check intersection with
+// @param clip (in)         Interval to clip the rays to
+// @param hitIndex (out)    index in the Scene of the intersected Quadric
+// @param hitInterval (out) t values where the ray enters and exits the Quadric
+// @return true if the ray intersects with the Scene
 bool intersectScene(Ray ray, Scene scene, Interval clip, out int hitIndex, out Interval hitInterval) {
     bool found = false;
-
     float tMin = 1e20;
     for (int i = 0; i < scene.size; i++) {
         Interval h;
-        if (!intersectQuadric(ray, scene.objects[i], clip, h))
-            continue;
+        if (!intersectQuadric(ray, scene.objects[i].matrix, clip, h)) continue;
 
         float t = h.min;
         if (t < 0.0) t = h.max;
         if (t < 0.0) continue;
-        
+
         if (t < clip.min || t > clip.max) continue;
 
         if (t < tMin) {
@@ -337,8 +357,7 @@ bool intersectScene(Ray ray, Scene scene, Interval clip, out int hitIndex, out I
             hitIndex = i;
             found = true;
         }
-    }
-    return found;
+    } return found;
 }
 
 // Distance function for point to grid distance
@@ -349,7 +368,7 @@ float dfGrid(vec2 p, float gridSize) {
 }
 
 
-vec3 render(Ray ray, mat4 Q, Interval hit, Interval clipping) {
+vec3 render(Ray ray, Quadric Q, Interval hit, Interval clipping) {
     // Pick nearest valid intersection inside clip range
     float t = hit.min;
 
@@ -358,7 +377,7 @@ vec3 render(Ray ray, mat4 Q, Interval hit, Interval clipping) {
 
     // --- Analytical normal: ∇(pᵀQp) = 2Qp ---
     vec4 ph = vec4(p, 1.0);
-    vec3 normal = normalize((Q * ph).xyz);
+    vec3 normal = normalize((Q.matrix * ph).xyz);
 
     // Fix orientation (ensure it faces camera)
     if (dot(normal, ray.direction) > 0.0)
@@ -371,15 +390,19 @@ vec3 render(Ray ray, mat4 Q, Interval hit, Interval clipping) {
     float ambient = 0.25;
     float spec = pow(max(dot(reflect(-lightDir, normal), -ray.direction), 0.0), 16.0);
 
-    vec3 baseColor = vec3(0.9, 0.1, 0.2);
+    vec3 baseColor = Q.color.xyz;
 
     vec3 color = baseColor * (ambient + 0.75 * diff) + spec * 0.25;
 
     // --- Grid overlay for spatial readability ---
-    float grid = dfGrid(p.xz, 0.5);
-    float gridLine = smoothstep(0.02, 0.0, grid);
+    float grid = dfGrid(p.xz, u_gridScale);
+    float gridLine = smoothstep(0.002 * u_camera.viewMod, 0.0, grid);
+
+    float subGrid = dfGrid(p.xz, u_gridScale / 5.0);
+    float subGridLine = smoothstep(0.002 * u_camera.viewMod, 0.0, subGrid);
 
     color = mix(color, vec3(1.0), gridLine * 0.6);
+    color = mix(color, vec3(0.7), subGridLine * 0.6);
 
     // --- Fresnel edge highlight (makes shape readable) ---
     float fresnel = pow(1.0 - abs(dot(normal, -ray.direction)), 3.0);
@@ -394,85 +417,13 @@ void main() {
     AABB clippingBox = generateAABB(u_camera.position, vec3(u_camera.viewMod * 0.5));
     mat4 clippingSphere = generateSphere(u_camera.position, u_camera.viewMod * 0.75);
 
-    mat4 quadrics[MAX_OBJECTS];
+    Scene scene = Scene(data, u_sceneSize);
 
-    quadrics[0] = mat4(
-        1,0,0,0,
-        0,1,0,0,
-        0,0,-1,0,
-        0,0,0,-1
-    );
-
-    quadrics[1] = mat4(
-        1,0,0,0,
-        0,1,0,0,
-        0,0,1,0,
-        0,0,0,-16.0
-    );
-
-    quadrics[2] = mat4 (
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 0.0, 0.0,
-        0.0, 0.0, 0.0, -1.0
-    );
-
-    quadrics[3] = mat4(
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, -1.0, 0.0,
-        0.0, 0.0, 0.0, 0.0
-    );
-
-    quadrics[4] = mat4(
-        1.0,  0.0,  0.0,  0.0,
-        0.0, -1.0,  0.0,  0.0,
-        0.0,  0.0,  0.0, -0.5,
-        0.0,  0.0, -0.5,  0.0
-    );
-
-    quadrics[5] = mat4(
-        1.0, 0.0, 0.0,  0.0,
-        0.0, 1.0, 0.0,  0.0,
-        0.0, 0.0, 0.0, -1.0,
-        0.0, 0.0,-1.0,  0.0
-    );
-
-    quadrics[6] = mat4(
-        1.0, 0.0,  0.0, 0.0,
-        0.0, 1.0,  0.0, 0.0,
-        0.0, 0.0, -1.0, 0.0,
-        0.0, 0.0,  0.0, 1.0
-    );
-
-    quadrics[7] = mat4(
-        1.0,  0.4,  0.0,  0.0,
-        0.4, -1.0,  0.0,  0.0,
-        0.0,  0.0,  0.0, -0.5,
-        0.0,  0.0, -0.5,  0.0
-    );
-
-    quadrics[8] = mat4(
-        1.0,  0.5,  0.0,  0.5,
-        0.5,  1.0,  0.5,  0.0,
-        0.0,  0.5, -1.0,  0.0,
-        0.5,  0.0,  0.0, -1.0
-    );
-
-    quadrics[9] = mat4(
-        1.0,  0.0, 0.0, 0.0,
-        0.0, -1.0, 0.0, 0.0,
-        0.0,  0.0, 0.0, 0.0,
-        0.0,  0.0, 0.0, 0.0
-    );
-
-    Scene scene = Scene(quadrics, 2);
-
-    Interval clippingHit = Interval(0.1, 100.0);
-   if (!intersectAABB(ray, clippingBox, clippingHit)) {
-       fragColor = vec4(0.05, 0.05, 0.05, 1.0);
-       return;
-   }
+    Interval clippingHit = Interval(0.1, u_camera.viewMod * 100.0);
+    if (!intersectAABB(ray, clippingBox, clippingHit)) {
+        fragColor = vec4(0.05, 0.05, 0.05, 1.0);
+        return;
+    }
 
     // --- Quadric intersection ---
     int hitIndex;

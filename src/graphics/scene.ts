@@ -1,5 +1,5 @@
 import {UBO} from "./ubo.js";
-import {Camera2D} from "./camera2d.js";
+import {Camera2D} from "./camera.js";
 import {GLRenderer, type Renderer} from "./renderer.js";
 import {defaultFrag2DSource, defaultVertSource, Shader} from "./shader.js";
 import {gl} from "../index.js";
@@ -41,9 +41,7 @@ export class Scene {
 
     public render(): void {
         this.shader.bind();
-        gl.uniform4f(this.shader.getUniformLoc("u_camera"), this.camera.x, this.camera.y,
-            this.camera.width, this.camera.height);
-        gl.uniform1f(this.shader.getUniformLoc("u_zoom"), this.camera.zoom);
+        this.camera.applyUniforms(this.gl, this.shader);
         gl.uniform1f(this.shader.getUniformLoc("u_gridScale"), this.getGridScale());
         this.objects.upload();
         this.renderer.render();

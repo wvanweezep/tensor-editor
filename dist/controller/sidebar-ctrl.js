@@ -12,7 +12,7 @@ export class SidebarCtrl extends Controller {
     }
     toggleCollapseSidebar() {
         this.sidebar.classList.toggle("collapsed");
-        this.sidebar.style.position = this.sidebar.classList.contains("collapsed") ? "absolute" : "relative";
+        //this.sidebar.style.position = this.sidebar.classList.contains("collapsed") ? "absolute" : "relative";
         this.collapseButton.textContent = this.sidebar.classList.contains("collapsed") ? "▶" : "◀";
     }
     startResizeSidebar() {

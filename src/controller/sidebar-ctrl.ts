@@ -13,7 +13,7 @@ export class SidebarCtrl extends Controller {
     @OnEvent("click", "#sidebar-collapse-button")
     private toggleCollapseSidebar(): void {
         this.sidebar.classList.toggle("collapsed");
-        this.sidebar.style.position = this.sidebar.classList.contains("collapsed") ? "absolute" : "relative";
+        //this.sidebar.style.position = this.sidebar.classList.contains("collapsed") ? "absolute" : "relative";
         this.collapseButton.textContent = this.sidebar.classList.contains("collapsed") ? "▶" : "◀";
     }
 

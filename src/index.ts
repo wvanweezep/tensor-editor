@@ -7,8 +7,11 @@ const canvas = document.querySelector<HTMLCanvasElement>("#mainCanvas")!;
 export const gl = canvas.getContext("webgl2")!;
 
 const sidebarCtrl = new SidebarCtrl();
-const entryListCtrl = new EntryListCtrl();
-const workspaceCtrl = new Workspace3DCtrl();
+const workspaceCtrl = new WorkspaceCtrl();
+const entryListCtrl = new EntryListCtrl(workspaceCtrl);
+
+// const workspaceCtrl = new Workspace3DCtrl();
+
 
 
 

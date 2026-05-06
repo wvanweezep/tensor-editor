@@ -7,8 +7,12 @@ export class WorkspaceCtrl extends Controller {
     @HTML<HTMLCanvasElement>("mainCanvas", HTMLCanvasElement)
     private canvas!: HTMLCanvasElement;
 
+    public tensorMap: Map<string, Float32Array>;
+
     constructor() {
         super();
+
+        this.tensorMap = new Map();
 
         const scene = new Scene(gl);
         const canvas = this.canvas;
@@ -24,10 +28,17 @@ export class WorkspaceCtrl extends Controller {
         }
 
         resizeCanvas();
-        scene.objects.set(0, new Float32Array([1, 1.0, 0.0, 1.0, 0.0, 0.0, -4.0, 0.0]));
+        //scene.objects.set(0, new Float32Array([1, 1.0, 0.0, 1.0, 0.0, 0.0, -4.0, 0.0]));
         scene.objects.upload();
 
+        const tensors = this.tensorMap;
+
         (function frame() {
+            let i = 0;
+            for (const entry of tensors.values()) {
+                scene.objects.set(i++, entry);
+            }
+
             scene.render();
             requestAnimationFrame(frame);
         })();

@@ -6,19 +6,19 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 import { Controller, HTML, OnEvent } from "./controller.js";
 export class EntryListCtrl extends Controller {
-    constructor() {
-        super(...arguments);
+    constructor(workspaceCtrl) {
+        super();
         this.nextId = 0;
+        this.workspaceCtrl = workspaceCtrl;
     }
-    // TODO: Remove later
     toggleCollapseSidebarEntry(e, header) {
         const parent = header.parentElement;
         parent === null || parent === void 0 ? void 0 : parent.classList.toggle('open');
     }
     clickAddEntry() {
-        this.addEntry(String.fromCharCode(65 + this.nextId++), "...");
+        this.addEntry(String.fromCharCode(65 + this.nextId++));
     }
-    addEntry(name, content) {
+    addEntry(name) {
         const entry = document.createElement("div");
         entry.className = "sidebar-tensor-entry open";
         entry.id = name;
@@ -39,11 +39,73 @@ export class EntryListCtrl extends Controller {
         // Content
         const entryContent = document.createElement("div");
         entryContent.className = "sidebar-tensor-entry-content";
-        entryContent.textContent = content;
+        entryContent.id = name + "-content";
+        entryContent.appendChild(this.createTensorDropdown(name));
+        entryContent.appendChild(this.createTensorInput(name, 3, 1));
         entry.appendChild(entryHeader);
         entry.appendChild(entryContent);
-        entryHeader.addEventListener("click", (e) => this.toggleCollapseSidebarEntry(e, entryHeader));
+        entryHeader.addEventListener("click", (e) => {
+            const parent = entryHeader.parentElement;
+            parent === null || parent === void 0 ? void 0 : parent.classList.toggle('open');
+        });
         this.tensorList.appendChild(entry);
+    }
+    createTensorDropdown(id) {
+        const label = document.createElement("label");
+        label.style = "display: flex; justify-content: space-between";
+        label.textContent = "Type: ";
+        const select = document.createElement("select");
+        select.id = id + "-tensor-type";
+        select.addEventListener("change", () => {
+            var _a, _b;
+            (_a = document.getElementById(id + "-tensor")) === null || _a === void 0 ? void 0 : _a.remove();
+            (_b = document.getElementById(id + "-content")) === null || _b === void 0 ? void 0 : _b.appendChild(this.createTensorInput(id, 3, select.value == "conic" ? 3 : 1));
+            this.workspaceCtrl.tensorMap.delete(id);
+        });
+        const optPoint = document.createElement("option");
+        optPoint.value = "point";
+        optPoint.textContent = "Point";
+        select.appendChild(optPoint);
+        const optLine = document.createElement("option");
+        optLine.value = "line";
+        optLine.textContent = "Line";
+        select.appendChild(optLine);
+        const optConic = document.createElement("option");
+        optConic.value = "conic";
+        optConic.textContent = "Conic";
+        select.appendChild(optConic);
+        label.appendChild(select);
+        return label;
+    }
+    createTensorInput(id, width, height) {
+        const tensor = document.createElement("div");
+        tensor.id = id + "-tensor";
+        for (let i = 0; i < height; i++) {
+            const row = document.createElement("div");
+            row.style = "display: flex; justify-content: center";
+            for (let j = 0; j < width; j++) {
+                const entry = document.createElement("input");
+                entry.type = "number";
+                entry.className = "tensor-entry";
+                entry.value = "0";
+                entry.addEventListener(("change"), () => this.workspaceCtrl.tensorMap.set(id, this.readTensorData(id)));
+                row.appendChild(entry);
+            }
+            tensor.appendChild(row);
+        }
+        return tensor;
+    }
+    readTensorData(id) {
+        const tensor = document.getElementById(id + "-tensor");
+        const inputs = tensor.querySelectorAll("input.tensor-entry");
+        const values = new Float32Array(12);
+        const type = document.getElementById(id + "-tensor-type").value;
+        values[0] = (type == "point" ? 1 : (type == "line" ? 2 : 3));
+        inputs.forEach((input, index) => {
+            const val = parseFloat(input.value);
+            values[index + 1] = isNaN(val) ? 0 : val;
+        });
+        return values;
     }
     createHeaderButtons(id) {
         const buttons = document.createElement("div");
@@ -79,6 +141,7 @@ export class EntryListCtrl extends Controller {
         button.textContent = "✕";
         button.onclick = (e) => {
             var _a;
+            this.workspaceCtrl.tensorMap.delete(id);
             (_a = document.getElementById(id)) === null || _a === void 0 ? void 0 : _a.remove();
             e.stopPropagation();
         };

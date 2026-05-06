@@ -9,7 +9,7 @@ export class Scene {
         this.renderer = new GLRenderer(gl);
         this.shader = new Shader(gl, defaultVertSource, defaultFrag2DSource);
         this.camera = new Camera2D(0, 0, 1600, 900);
-        this.objects = new UBO(gl, 1000, 8, 0);
+        this.objects = new UBO(gl, 1000, 12, 0);
         this.objects.bind(this.shader, "Scene");
     }
     getGridScale() {

@@ -10,6 +10,7 @@ import { gl } from "../index.js";
 export class WorkspaceCtrl extends Controller {
     constructor() {
         super();
+        this.tensorMap = new Map();
         const scene = new Scene(gl);
         const canvas = this.canvas;
         function resizeCanvas() {
@@ -23,9 +24,14 @@ export class WorkspaceCtrl extends Controller {
             scene.resize(canvas.width, canvas.height);
         }
         resizeCanvas();
-        scene.objects.set(0, new Float32Array([1, 1.0, 0.0, 1.0, 0.0, 0.0, -4.0, 0.0]));
+        //scene.objects.set(0, new Float32Array([1, 1.0, 0.0, 1.0, 0.0, 0.0, -4.0, 0.0]));
         scene.objects.upload();
+        const tensors = this.tensorMap;
         (function frame() {
+            let i = 0;
+            for (const entry of tensors.values()) {
+                scene.objects.set(i++, entry);
+            }
             scene.render();
             requestAnimationFrame(frame);
         })();

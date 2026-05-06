@@ -5,10 +5,6 @@ import type {Shader} from "./shader.js";
 // TODO: Better dirty flags (dirtyMin - dirtyMax)
 // https://wikis.khronos.org/opengl/Uniform_Buffer_Object
 
-// DATA LAYOUT PROPOSAL
-// size: 8 floats -> 2x vec4
-// type (0 = Empty, 1 = Point, 2 = Line, 3 = Conic) - tensor data - color
-//   1                                                    2-7         8
 
 export class UBO {
 
